@@ -16,5 +16,10 @@ namespace StudentExercisesPt6.Models
             Name = name;
             Language = language;
         }
+
+        public Exercise()
+        {
+
+        }
     }
 }

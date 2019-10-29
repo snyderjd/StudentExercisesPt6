@@ -5,19 +5,11 @@ using System.Threading.Tasks;
 
 namespace StudentExercisesPt6.Models
 {
-    public class Student
+    public class Student : NSSPerson
     {
-        public List<Exercise> Exercises { get; set; }
+        public List<Exercise> Exercises { get; set; } = new List<Exercise>();
         public int Id { get; set; }
 
-        public Student(int id, string firstName, string lastName, string slackHandle, Cohort cohort)
-        {
-            Exercises = new List<Exercise>();
-            FirstName = firstName;
-            LastName = lastName;
-            SlackHandle = slackHandle;
-            Cohort = cohort;
-            Id = id;
-        }
+        
     }
 }
