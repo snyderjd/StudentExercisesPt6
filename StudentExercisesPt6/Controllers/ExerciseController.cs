@@ -132,17 +132,19 @@ namespace StudentExercisesPt6.Controllers
 
         // DELETE: api/exercise/3
         [HttpDelete("{id}")]
-        public void Delete([FromRoute] int id)
+        public void DeleteExercise([FromRoute] int id)
         {
-
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "DELETE FROM Exercise WHERE Id = @id";
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
+                    cmd.ExecuteNonQuery();
+                }
+            }
         }
-
-        // DELETE: api/ApiWithActions/5
-        //[HttpDelete("{id}")]
-        //public void Delete(int id)
-        //{
-        //}
-
 
 
     }
