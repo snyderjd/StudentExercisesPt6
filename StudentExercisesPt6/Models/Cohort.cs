@@ -19,5 +19,10 @@ namespace StudentExercisesPt6.Models
             Students = new List<Student>();
             Instructors = new List<Instructor>();
         }
+
+        public Cohort()
+        {
+
+        }
     }
 }

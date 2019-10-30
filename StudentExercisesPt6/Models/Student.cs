@@ -10,6 +10,6 @@ namespace StudentExercisesPt6.Models
         public List<Exercise> Exercises { get; set; } = new List<Exercise>();
         public int Id { get; set; }
 
-        
+        public int CohortId { get; set; }
     }
 }

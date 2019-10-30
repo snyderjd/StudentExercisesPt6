@@ -61,6 +61,7 @@ namespace StudentExercisesPt6.Controllers
             }
         }
 
+        /// <summary> Get one exercise from the database with the exercise id that is in the url</summary>
         [HttpGet("{id}")]
         public IActionResult GetExercise([FromRoute] int id)
         {
