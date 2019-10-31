@@ -30,76 +30,145 @@ namespace StudentExercisesPt6.Controllers
             }
         }
 
-        /// <summary>Gets all the students from the database</summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllStudents()
+        public async Task<IActionResult> Get(string include)
+        {
+            if (include != null)
+            {
+                return await GetStudentsWithExercises(include);
+            }
+            else
+            {
+                return await GetStudents();
+            }
+        }
+
+        /// <summary>Gets all the students from the database with an empty list of exercises</summary>
+        private async Task<IActionResult> GetStudents()
         {
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT s.Id as 'TheStudentId', s.FirstName, s.LastName, s.SlackHandle, s.CohortId, 
-                                                   c.Id as 'TheCohortId', c.Name as 'CohortName', 
-	                                               se.ExerciseId, e.Name as 'ExerciseName', e.Language
-                                            FROM Student s LEFT JOIN Cohort c ON s.CohortId = c.Id
-	                                            LEFT JOIN StudentExercise se ON se.StudentId = s.Id
-	                                            LEFT JOIN Exercise e ON se.ExerciseId = e.Id";
+                    cmd.CommandText = @"SELECT s.Id, s.FirstName, s.LastName, s.SlackHandle, s.CohortId,
+                                                    c.Name
+                                            FROM Student s LEFT JOIN Cohort c on s.CohortId = c.Id";
                     SqlDataReader reader = cmd.ExecuteReader();
-
                     Dictionary<int, Student> students = new Dictionary<int, Student>();
 
                     while (reader.Read())
                     {
-                        int studentId = reader.GetInt32(reader.GetOrdinal("TheStudentId"));
-                        if (!students.ContainsKey(studentId))
+                        int studentId = reader.GetInt32(reader.GetOrdinal("Id"));
+                        Student newStudent = new Student
                         {
-                            Student newStudent = new Student
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                            SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                            Exercises = new List<Exercise>(),
+                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                            Cohort = new Cohort
                             {
-                                Id = reader.GetInt32(reader.GetOrdinal("TheStudentId")),
-                                FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
-                                LastName = reader.GetString(reader.GetOrdinal("LastName")),
-                                SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
-                                Exercises = new List<Exercise>(),
-                                CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
-                                Cohort = new Cohort
-                                {
-                                    Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
-                                    Name = reader.GetString(reader.GetOrdinal("CohortName")),
-                                    Students = new List<Student>(),
-                                    Instructors = new List<Instructor>()
-                                }
-                            };
-
+                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                Name = reader.GetString(reader.GetOrdinal("Name")),
+                                Students = new List<Student>(),
+                                Instructors = new List<Instructor>()
+                            }
+                        };
                         students.Add(studentId, newStudent);
-                        }
+                    }
+                    reader.Close();
+                    return Ok(students.Values);
+                }
+            }
+        }
 
-                        Student fromDictionary = students[studentId];
-                            
-                        if (! reader.IsDBNull(reader.GetOrdinal("ExerciseId")))
+        /// <summary>Gets all the students from the database and includes all the exercises that have been assigned to that student</summary>
+        private async Task<IActionResult> GetStudentsWithExercises(string include)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+
+                    if (include.ToLower() == "exercise")
+                    {
+                        cmd.CommandText = @"SELECT s.Id as 'TheStudentId', s.FirstName, s.LastName, s.SlackHandle, s.CohortId, 
+                                               c.Id as 'TheCohortId', c.Name as 'CohortName', 
+                                            se.ExerciseId, e.Name as 'ExerciseName', e.Language
+                                        FROM Student s LEFT JOIN Cohort c ON s.CohortId = c.Id
+                                        LEFT JOIN StudentExercise se ON se.StudentId = s.Id
+                                        LEFT JOIN Exercise e ON se.ExerciseId = e.Id";
+                        SqlDataReader reader = cmd.ExecuteReader();
+
+                        Dictionary<int, Student> students = new Dictionary<int, Student>();
+                        while (reader.Read())
                         {
-                            Exercise exercise = new Exercise
+                            int studentId = reader.GetInt32(reader.GetOrdinal("TheStudentId"));
+                            if (!students.ContainsKey(studentId))
                             {
-                                Id = reader.GetInt32(reader.GetOrdinal("ExerciseId")),
-                                Name = reader.GetString(reader.GetOrdinal("ExerciseName")),
-                                Language = reader.GetString(reader.GetOrdinal("Language"))
-                            };
-                            fromDictionary.Exercises.Add(exercise);
+                                Student newStudent = new Student
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("TheStudentId")),
+                                    FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                    LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                    SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                                    Exercises = new List<Exercise>(),
+                                    CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                    Cohort = new Cohort
+                                    {
+                                        Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                        Name = reader.GetString(reader.GetOrdinal("CohortName")),
+                                        Students = new List<Student>(),
+                                        Instructors = new List<Instructor>()
+                                    }
+                                };
+
+                                students.Add(studentId, newStudent);
+                            }
+
+                            Student fromDictionary = students[studentId];
+
+                            if (!reader.IsDBNull(reader.GetOrdinal("ExerciseId")))
+                            {
+                                Exercise exercise = new Exercise
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("ExerciseId")),
+                                    Name = reader.GetString(reader.GetOrdinal("ExerciseName")),
+                                    Language = reader.GetString(reader.GetOrdinal("Language"))
+                                };
+                                fromDictionary.Exercises.Add(exercise);
+                            }
+
                         }
 
+                        reader.Close();
+                        return Ok(students.Values);
                     }
 
-                    reader.Close();
-
-                    return Ok(students.Values);
-                 
+                    return null;
                 }
             }
         }
 
         ///<summary>Get one student from the database based on the student's id in the url</summary>
         [HttpGet("{id}")]
-        public IActionResult GetStudent([FromRoute] int id)
+        public async Task<IActionResult> Get([FromRoute] int id, string include)
+        {
+            if (include != null)
+            {
+                return await GetStudentWithExercises(id, include);
+            }
+            else
+            {
+                return await GetStudent(id);
+            }
+        }
+
+
+        private async Task<IActionResult> GetStudent([FromRoute] int id)
         {
             using (SqlConnection conn = Connection)
             {
@@ -135,6 +204,77 @@ namespace StudentExercisesPt6.Controllers
                     reader.Close();
 
                     return Ok(student);
+                }
+            }
+        }
+
+        // Get one student from the database and include all of their exercises
+        private async Task<IActionResult> GetStudentWithExercises(int id, string include)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+
+                    if (include.ToLower() == "exercise")
+                    {
+                        cmd.CommandText = @"SELECT s.Id as 'TheStudentId', s.FirstName, s.LastName, s.SlackHandle, s.CohortId, 
+                                               c.Id as 'TheCohortId', c.Name as 'CohortName', 
+                                            se.ExerciseId, e.Name as 'ExerciseName', e.Language
+                                        FROM Student s LEFT JOIN Cohort c ON s.CohortId = c.Id
+                                        LEFT JOIN StudentExercise se ON se.StudentId = s.Id
+                                        LEFT JOIN Exercise e ON se.ExerciseId = e.Id
+                                        WHERE s.Id = @id";
+                        cmd.Parameters.Add(new SqlParameter("@id", id));
+                        SqlDataReader reader = cmd.ExecuteReader();
+
+                        Dictionary<int, Student> students = new Dictionary<int, Student>();
+                        while (reader.Read())
+                        {
+                            int studentId = reader.GetInt32(reader.GetOrdinal("TheStudentId"));
+                            if (!students.ContainsKey(studentId))
+                            {
+                                Student newStudent = new Student
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("TheStudentId")),
+                                    FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                    LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                    SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                                    Exercises = new List<Exercise>(),
+                                    CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                    Cohort = new Cohort
+                                    {
+                                        Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                        Name = reader.GetString(reader.GetOrdinal("CohortName")),
+                                        Students = new List<Student>(),
+                                        Instructors = new List<Instructor>()
+                                    }
+                                };
+
+                                students.Add(studentId, newStudent);
+                            }
+
+                            Student fromDictionary = students[studentId];
+
+                            if (!reader.IsDBNull(reader.GetOrdinal("ExerciseId")))
+                            {
+                                Exercise exercise = new Exercise
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("ExerciseId")),
+                                    Name = reader.GetString(reader.GetOrdinal("ExerciseName")),
+                                    Language = reader.GetString(reader.GetOrdinal("Language"))
+                                };
+                                fromDictionary.Exercises.Add(exercise);
+                            }
+
+                        }
+
+                        reader.Close();
+                        return Ok(students.Values);
+                    }
+
+                    return null;
                 }
             }
         }
