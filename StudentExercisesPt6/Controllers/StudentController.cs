@@ -29,7 +29,7 @@ namespace StudentExercisesPt6.Controllers
                 return new SqlConnection(_config.GetConnectionString("DefaultConnection"));
             }
         }
-
+        
         [HttpGet]
         public async Task<IActionResult> Get(string include)
         {

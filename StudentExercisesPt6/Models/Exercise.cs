@@ -10,6 +10,9 @@ namespace StudentExercisesPt6.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public string Language { get; set; }
+
+        public List<Student> Students { get; set; } = new List<Student>();
+
         public Exercise(int id, string name, string language)
         {
             Id = id;

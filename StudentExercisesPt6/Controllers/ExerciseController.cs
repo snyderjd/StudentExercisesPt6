@@ -30,9 +30,29 @@ namespace StudentExercisesPt6.Controllers
             }
         }
 
-        /// <summary>Gets all the exercises from the database</summary>
         [HttpGet]
-        public List<Exercise> GetAllExercises(string q)
+        public async Task<IActionResult> Get(string q, string include)
+        {
+            if (q != null && include != null)
+            {
+                return null;
+            }
+            else if (q != null && include == null)
+            {
+                return await GetExercisesWithQ(q);
+            } 
+            else if (q == null && include != null)
+            {
+                return await GetExercisesIncludeStudents(include);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>Gets all the exercises from the database</summary>
+        private async Task<IActionResult> GetExercisesWithQ(string q)
         {
             using (SqlConnection conn = Connection)
             {
@@ -58,7 +78,67 @@ namespace StudentExercisesPt6.Controllers
                     }
                     reader.Close();
 
-                    return exercises;
+                    return Ok(exercises);
+                    
+                }
+            }
+        }
+
+        // Get all Exercises from the database and include list of students working on that exercise
+        private async Task<IActionResult> GetExercisesIncludeStudents(string include)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    if (include.ToLower() == "student")
+                    {
+                        cmd.CommandText = @"SELECT e.Id as 'TheExerciseId', e.Name as 'ExerciseName', e.Language,
+		                                            s.Id as 'TheStudentId', s.FirstName, s.LastName, s.SlackHandle, s.CohortId
+                                            FROM Exercise e LEFT JOIN StudentExercise se ON se.ExerciseId = e.Id
+				                            LEFT JOIN Student s on se.StudentId = s.Id";
+                        SqlDataReader reader = cmd.ExecuteReader();
+
+                        Dictionary<int, Exercise> exercises = new Dictionary<int, Exercise>();
+                        while(reader.Read())
+                        {
+                            int exerciseId = reader.GetInt32(reader.GetOrdinal("TheExerciseId"));
+                            if (!exercises.ContainsKey(exerciseId))
+                            {
+                                Exercise exercise = new Exercise
+                                {
+                                    Id = exerciseId,
+                                    Name = reader.GetString(reader.GetOrdinal("ExerciseName")),
+                                    Language = reader.GetString(reader.GetOrdinal("Language"))
+                                };
+
+                                exercises.Add(exerciseId, exercise);
+                            }
+
+                            Exercise fromDictionary = exercises[exerciseId];
+                            if (!reader.IsDBNull(reader.GetOrdinal("TheStudentId")))
+                            {
+                                Student student = new Student
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("TheStudentId")),
+                                    FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                    LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                    SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                                    CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                    Cohort = null
+                                };
+
+                                fromDictionary.Students.Add(student);
+                            }
+
+                        }
+                        reader.Close();
+
+                        return Ok(exercises.Values);
+                    }
+
+                    return null;
                     
                 }
             }
