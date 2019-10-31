@@ -32,14 +32,16 @@ namespace StudentExercisesPt6.Controllers
 
         /// <summary>Gets all the exercises from the database</summary>
         [HttpGet]
-        public List<Exercise> GetAllExercises()
+        public List<Exercise> GetAllExercises(string q)
         {
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT Id, Name, Language FROM Exercise";
+                    cmd.CommandText = @"SELECT Id, Name, Language FROM Exercise
+                                        WHERE Name LIKE @q OR Language LIKE @q";
+                    cmd.Parameters.Add(new SqlParameter("@q", q));
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     List<Exercise> exercises = new List<Exercise>();
@@ -57,6 +59,7 @@ namespace StudentExercisesPt6.Controllers
                     reader.Close();
 
                     return exercises;
+                    
                 }
             }
         }

@@ -32,45 +32,88 @@ namespace StudentExercisesPt6.Controllers
         //GET: api/instructor
         /// <summary>Gets all the instructors from the database</summary>
         [HttpGet]
-        public List<Instructor> GetAllInstructors()
+        public List<Instructor> GetAllInstructors(string q)
         {
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT i.Id, i.FirstName, i.LastName, i.SlackHandle, i.Specialty, i.CohortId, c.Id, c.Name 
-                                        FROM Instructor i LEFT JOIN Cohort c ON i.CohortId = c.Id";
-                    SqlDataReader reader = cmd.ExecuteReader();
-
-                    List<Instructor> instructors = new List<Instructor>();
-                    Instructor instructor = null;
-
-                    while (reader.Read())
+                    if (q != null)
                     {
-                        instructor = new Instructor
+                        cmd.CommandText = @"SELECT i.Id, i.FirstName, i.LastName, i.SlackHandle, i.Specialty, i.CohortId, c.Id, c.Name 
+                                        FROM Instructor i LEFT JOIN Cohort c ON i.CohortId = c.Id
+                                        WHERE i.FirstName LIKE @q OR i.LastName LIKE @q OR i.SlackHandle LIKE @q";
+
+                        cmd.Parameters.Add(new SqlParameter("@q", q));
+                        //cmd.Parameters.Add(new SqlParameter("@lastName", lastName));
+                        //cmd.Parameters.Add(new SqlParameter("@slackHandle", slackHandle));
+                        SqlDataReader reader = cmd.ExecuteReader();
+
+                        List<Instructor> instructors = new List<Instructor>();
+                        Instructor instructor = null;
+
+                        while (reader.Read())
                         {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
-                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
-                            SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
-                            Specialty = reader.GetString(reader.GetOrdinal("Specialty")),
-                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
-                            Cohort = new Cohort
+                            instructor = new Instructor
                             {
-                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
-                                Name = reader.GetString(reader.GetOrdinal("Name")),
-                                Students = new List<Student>(),
-                                Instructors = new List<Instructor>()
-                            }
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                                Specialty = reader.GetString(reader.GetOrdinal("Specialty")),
+                                CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                Cohort = new Cohort
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                    Name = reader.GetString(reader.GetOrdinal("Name")),
+                                    Students = new List<Student>(),
+                                    Instructors = new List<Instructor>()
+                                }
 
-                        };
+                            };
 
-                        instructors.Add(instructor);
+                            instructors.Add(instructor);
+                        }
+                        reader.Close();
+                        return instructors;
                     }
-                    reader.Close();
+                    else
+                    {
+                        cmd.CommandText = @"SELECT i.Id, i.FirstName, i.LastName, i.SlackHandle, i.Specialty, i.CohortId, c.Id, c.Name 
+                                        FROM Instructor i LEFT JOIN Cohort c ON i.CohortId = c.Id";
 
-                    return instructors;
+                        SqlDataReader reader = cmd.ExecuteReader();
+
+                        List<Instructor> instructors = new List<Instructor>();
+                        Instructor instructor = null;
+
+                        while (reader.Read())
+                        {
+                            instructor = new Instructor
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                                Specialty = reader.GetString(reader.GetOrdinal("Specialty")),
+                                CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                Cohort = new Cohort
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                    Name = reader.GetString(reader.GetOrdinal("Name")),
+                                    Students = new List<Student>(),
+                                    Instructors = new List<Instructor>()
+                                }
+
+                            };
+
+                            instructors.Add(instructor);
+                        }
+                        reader.Close();
+                        return instructors;
+                    }
+
                 }
             }
         }

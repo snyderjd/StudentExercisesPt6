@@ -1,13 +1,5 @@
-﻿SELECT c.Name, s.Id, s.FirstName, s.LastName, s.SlackHandle, s.CohortId,
-                                                i.Id, i.FirstName, i.LastName, i.SlackHandle, i.CohortId, i.Specialty
-                                        FROM Cohort c LEFT JOIN Student s ON s.CohortId = c.Id
-                                                      --RIGHT JOIN Instructor i ON i.CohortId = c.Id
+﻿SELECT c.Id as 'TheCohortId', c.Name as 'CohortName',
+		s.Id as 'TheStudentId', s.FirstName as 'StudentFirstName', s.LastName as 'StudentLastName', s.SlackHandle as 'StudentSlackHandle',
+		i.Id as 'TheInstructorId', i.FirstName as 'InstructorFirstName', i.LastName as 'InstructorLastName', i.SlackHandle as 'InstructorSlackHandle'
+FROM Cohort c LEFT JOIN Student s ON s.CohortId = c.Id LEFT JOIN Instructor i ON i.CohortId = c.Id;
 
-SELECT c.Name, s.Id, s.FirstName, s.LastName, s.SlackHandle, s.CohortId,
-		i.Id, i.FirstName, i.LastName, i.SlackHandle, i.CohortId, i.Specialty
-FROM Cohort c INNER JOIN Student s ON s.CohortId = c.Id
-			INNER JOIN Instructor i ON i.CohortId = c.Id;
-
-SELECT	c.Id as 'CohortId', c.Name,
-		s.Id as 'StudentId', s.FirstName, s.LastName, s.SlackHandle, s.CohortId
-FROM Cohort c JOIN Student s ON s.CohortId = c.Id
