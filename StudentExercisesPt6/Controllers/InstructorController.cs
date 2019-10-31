@@ -29,10 +29,68 @@ namespace StudentExercisesPt6.Controllers
             }
         }
 
-        //GET: api/instructor
-        /// <summary>Gets all the instructors from the database</summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllInstructors(string q)
+        public async Task<IActionResult> Get(string q)
+        {
+            if (q != null)
+            {
+                //q query string parameter is used
+                return await GetInstructorsQ(q);
+            }
+            else
+            {
+                //q query string parameter is not used
+                return await GetInstructors();
+            }
+        }
+        
+        // Gets all the instructors from the database when no q parameter is used
+        private async Task<IActionResult> GetInstructors()
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT i.Id, i.FirstName, i.LastName, i.SlackHandle, i.Specialty, i.CohortId, c.Id,                         c.Name 
+                                        FROM Instructor i LEFT JOIN Cohort c ON i.CohortId = c.Id";
+
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    List<Instructor> instructors = new List<Instructor>();
+                    Instructor instructor = null;
+
+                    while (reader.Read())
+                    {
+                        instructor = new Instructor
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                            SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                            Specialty = reader.GetString(reader.GetOrdinal("Specialty")),
+                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                            Cohort = new Cohort
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                Name = reader.GetString(reader.GetOrdinal("Name")),
+                                Students = new List<Student>(),
+                                Instructors = new List<Instructor>()
+                            }
+
+                        };
+
+                        instructors.Add(instructor);
+                    }
+                    reader.Close();
+                    return Ok(instructors);
+
+                }
+            }
+        }
+
+        //GET: api/instructor
+        /// <summary>Gets all the instructors from the database when q parameter is used</summary>
+        private async Task<IActionResult> GetInstructorsQ(string q)
         {
             using (SqlConnection conn = Connection)
             {
