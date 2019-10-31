@@ -35,7 +35,7 @@ namespace StudentExercisesPt6.Controllers
         {
             if (q != null && include != null)
             {
-                return null;
+                return await GetExercisesIncludeStudentsWithQ(q, include);
             }
             else if (q != null && include == null)
             {
@@ -47,11 +47,44 @@ namespace StudentExercisesPt6.Controllers
             }
             else
             {
-                return null;
+                return await GetExercises();
             }
         }
 
-        /// <summary>Gets all the exercises from the database</summary>
+        // Gets all exercises from the databases with no query string parameters
+        private async Task<IActionResult> GetExercises()
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT Id, Name, Language FROM Exercise";
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    List<Exercise> exercises = new List<Exercise>();
+                    Exercise exercise = null;
+
+                    while (reader.Read())
+                    {
+                        exercise = new Exercise
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            Name = reader.GetString(reader.GetOrdinal("Name")),
+                            Language = reader.GetString(reader.GetOrdinal("Language")),
+                            Students = new List<Student>()
+                        };
+
+                        exercises.Add(exercise);
+                    }
+                    reader.Close();
+
+                    return Ok(exercises);
+                }
+            }
+        }
+
+        /// <summary>Gets all the exercises from the database with string parameter ?q= </summary>
         private async Task<IActionResult> GetExercisesWithQ(string q)
         {
             using (SqlConnection conn = Connection)
@@ -80,6 +113,67 @@ namespace StudentExercisesPt6.Controllers
 
                     return Ok(exercises);
                     
+                }
+            }
+        }
+
+        private async Task<IActionResult> GetExercisesIncludeStudentsWithQ(string q, string include)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    if (include.ToLower() == "student")
+                    {
+                        cmd.CommandText = @"SELECT e.Id as 'TheExerciseId', e.Name as 'ExerciseName', e.Language,
+		                                            s.Id as 'TheStudentId', s.FirstName, s.LastName, s.SlackHandle, s.CohortId
+                                            FROM Exercise e LEFT JOIN StudentExercise se ON se.ExerciseId = e.Id
+				                            LEFT JOIN Student s on se.StudentId = s.Id
+                                            WHERE Name LIKE @q OR Language LIKE @q";
+                        cmd.Parameters.Add(new SqlParameter("@q", q));
+                        SqlDataReader reader = cmd.ExecuteReader();
+
+                        Dictionary<int, Exercise> exercises = new Dictionary<int, Exercise>();
+                        while (reader.Read())
+                        {
+                            int exerciseId = reader.GetInt32(reader.GetOrdinal("TheExerciseId"));
+                            if (!exercises.ContainsKey(exerciseId))
+                            {
+                                Exercise exercise = new Exercise
+                                {
+                                    Id = exerciseId,
+                                    Name = reader.GetString(reader.GetOrdinal("ExerciseName")),
+                                    Language = reader.GetString(reader.GetOrdinal("Language"))
+                                };
+
+                                exercises.Add(exerciseId, exercise);
+                            }
+
+                            Exercise fromDictionary = exercises[exerciseId];
+                            if (!reader.IsDBNull(reader.GetOrdinal("TheStudentId")))
+                            {
+                                Student student = new Student
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("TheStudentId")),
+                                    FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                    LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                    SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                                    CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                    Cohort = null
+                                };
+
+                                fromDictionary.Students.Add(student);
+                            }
+
+                        }
+                        reader.Close();
+
+                        return Ok(exercises.Values);
+                    }
+
+                    return null;
+
                 }
             }
         }
