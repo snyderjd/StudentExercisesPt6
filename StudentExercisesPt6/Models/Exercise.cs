@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace StudentExercisesPt6.Models
 {
     public class Exercise
     {
         public int Id { get; set; }
+
+        [Required]
         public string Name { get; set; }
+        [Required]
         public string Language { get; set; }
 
         public List<Student> Students { get; set; } = new List<Student>();
