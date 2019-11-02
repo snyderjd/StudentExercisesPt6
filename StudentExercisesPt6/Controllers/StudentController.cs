@@ -403,7 +403,7 @@ namespace StudentExercisesPt6.Controllers
         ///<summary>Post a new student to the database</summary>
         // POST: api/Student
         [HttpPost]
-        public void PostStudent([FromBody] Student newStudent)
+        public async Task<IActionResult> PostStudent([FromBody] Student newStudent)
         {
             using (SqlConnection conn = Connection)
             {
@@ -411,13 +411,15 @@ namespace StudentExercisesPt6.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"INSERT INTO Student (FirstName, LastName, SlackHandle, CohortId)
+                                        OUTPUT INSERTED.Id
                                         VALUES (@firstName, @lastName, @slackHandle, @cohortId)";
                     cmd.Parameters.Add(new SqlParameter("@firstName", newStudent.FirstName));
                     cmd.Parameters.Add(new SqlParameter("@lastName", newStudent.LastName));
                     cmd.Parameters.Add(new SqlParameter("@slackHandle", newStudent.SlackHandle));
                     cmd.Parameters.Add(new SqlParameter("@cohortId", newStudent.CohortId));
-
                     cmd.ExecuteNonQuery();
+
+                    return Ok(newStudent);
                 }
             }
         }
