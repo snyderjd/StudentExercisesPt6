@@ -79,6 +79,72 @@ namespace TestStudentExercisesAPI
             }
         }
 
+        [Fact]
+        public async Task TestPutCohort()
+        {
+            // new Name to change to and test
+            string name = "Day 33";
+            using (var client = new APIClientProvider().Client)
+            {
+                // PUT section
+                Cohort updatedCohort = new Cohort
+                {
+                    Name = name
+                };
+
+                var modifiedCohortAsJSON = JsonConvert.SerializeObject(updatedCohort);
+                var response = await client.PutAsync(
+                    "api/cohort/1",
+                    new StringContent(modifiedCohortAsJSON, Encoding.UTF8, "application/json"));
+
+                string responseBody = await response.Content.ReadAsStringAsync();
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+                // GET section - verify that the PUT operation was successful
+                var getCohort = await client.GetAsync("/api/cohort/1");
+                getCohort.EnsureSuccessStatusCode();
+                string getCohortBody = await getCohort.Content.ReadAsStringAsync();
+                var cohortList = JsonConvert.DeserializeObject<List<Cohort>>(getCohortBody);
+
+                Assert.Equal(HttpStatusCode.OK, getCohort.StatusCode);
+                Assert.Equal(name, cohortList[0].Name);
+            }
+        }
+
+       [Fact]
+       public async Task TestDeleteCohort()
+       {
+            using (var client = new APIClientProvider().Client)
+            {
+                int deleteId = 7;
+
+                // Act
+                var response = await client.DeleteAsync($"/api/cohort/{deleteId}");
+                string responseBody = await response.Content.ReadAsStringAsync();
+                var cohort = JsonConvert.DeserializeObject<Cohort>(responseBody);
+
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            }
+       }
+
+        //[Fact]
+        //public async Task TestDeleteStudent()
+        //{
+        //    using (var client = new APIClientProvider().Client)
+        //    {
+        //        int deleteId = 14;
+        //        // Arrange
+
+        //        // Act
+        //        var response = await client.DeleteAsync($"/api/student/{deleteId}");
+        //        string responseBody = await response.Content.ReadAsStringAsync();
+        //        var student = JsonConvert.DeserializeObject<Student>(responseBody);
+
+        //        // Assert
+        //        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        //    }
+        //}
 
     }
 }
