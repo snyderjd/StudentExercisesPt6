@@ -99,7 +99,7 @@ namespace TestStudentExercisesAPI
 
                 var modifiedInstructorAsJSON = JsonConvert.SerializeObject(updatedInstructor);
 
-                var response = await client.PutAsync("api/instructor/8",
+                var response = await client.PutAsync("api/instructor/11",
                     new StringContent(modifiedInstructorAsJSON, Encoding.UTF8, "application/json"));
 
                 string responseBody = await response.Content.ReadAsStringAsync();
@@ -107,7 +107,7 @@ namespace TestStudentExercisesAPI
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
                 // GET section - verify that the PUT operation was successful
-                var getInstructor = await client.GetAsync("/api/instructor/8");
+                var getInstructor = await client.GetAsync("/api/instructor/11");
                 getInstructor.EnsureSuccessStatusCode();
 
                 string getInstructorBody = await getInstructor.Content.ReadAsStringAsync();
@@ -128,7 +128,7 @@ namespace TestStudentExercisesAPI
                 string responseBody = await response.Content.ReadAsStringAsync();
                 var instructorList = JsonConvert.DeserializeObject<List<Instructor>>(responseBody);
 
-                int deleteId = 10; //id of instructor to delete
+                int deleteId = 11; //id of instructor to delete
 
                 // Act
                 var response2 = await client.DeleteAsync($"/api/instructor/{deleteId}");
