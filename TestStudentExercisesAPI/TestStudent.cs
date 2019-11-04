@@ -32,6 +32,52 @@ namespace TestStudentExercisesAPI
         }
 
         [Fact]
+        public async Task TestGetStudentsWithQ()
+        {
+            using (var client = new APIClientProvider().Client)
+            {
+                // Arrange
+                // Act
+                var response = await client.GetAsync("/api/student?q=joseph");
+                string responseBody = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    var student = JsonConvert.DeserializeObject<Student>(responseBody);
+                }
+                catch
+                {
+                    List<Student> studentList = JsonConvert.DeserializeObject<List<Student>>(responseBody);
+                }
+
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            }
+        }
+
+        [Fact]
+        public async Task TestGetStudentsWithQIncludeExercise()
+        {
+            using (var client = new APIClientProvider().Client)
+            {
+                // Arrange
+                // Act
+                var response = await client.GetAsync("/api/student?q=joseph&include=exercise");
+                string responseBody = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    var student = JsonConvert.DeserializeObject<Student>(responseBody);
+                }
+                catch
+                {
+                    List<Student> studentList = JsonConvert.DeserializeObject<List<Student>>(responseBody);
+                }
+
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            }
+        }
+
+        [Fact]
         public async Task TestGetStudentsWithExercise()
         {
             using (var client = new APIClientProvider().Client)

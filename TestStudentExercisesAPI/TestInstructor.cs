@@ -31,6 +31,29 @@ namespace TestStudentExercisesAPI
         }
 
         [Fact]
+        public async Task TestGetInstructorsWithQ()
+        {
+            using (var client = new APIClientProvider().Client)
+            {
+                // Arrange
+                // Act
+                var response = await client.GetAsync("/api/instructor?q=Bryan");
+                string responseBody = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    List<Instructor> instructorList = JsonConvert.DeserializeObject<List<Instructor>>(responseBody);
+                }
+                catch
+                {
+                    var instructor = JsonConvert.DeserializeObject<Instructor>(responseBody);
+                }
+
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            }
+        }
+
+        [Fact]
         public async Task TestGetInstructor()
         {
             using (var client = new APIClientProvider().Client)

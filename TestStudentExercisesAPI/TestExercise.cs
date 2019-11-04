@@ -31,6 +31,29 @@ namespace TestStudentExercisesAPI
         }
 
         [Fact]
+        public async Task TestGetExercisesWithQ()
+        {
+            using (var client = new APIClientProvider().Client)
+            {
+                // Arrange
+                // Act
+                var response = await client.GetAsync("/api/exercise?q=javascript");
+                string responseBody = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    List<Exercise> exerciseList = JsonConvert.DeserializeObject<List<Exercise>>(responseBody);
+                }
+                catch
+                {
+                    var exercise = JsonConvert.DeserializeObject<Exercise>(responseBody);
+                }
+
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            }
+        }
+
+        [Fact]
         public async Task TestGetExercise()
         {
             using (var client = new APIClientProvider().Client)
@@ -44,6 +67,29 @@ namespace TestStudentExercisesAPI
                 // Assert
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
                 Assert.Equal("Chicken Monkey", exercise.Name);
+            }
+        }
+
+        [Fact]
+        public async Task TestGetExercisesWithQIncludeStudents()
+        {
+            using (var client = new APIClientProvider().Client)
+            {
+                // Arrange
+                // Act
+                var response = await client.GetAsync("api/exercise?q=javascript&include=student");
+                string responseBody = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    List<Exercise> exerciseList = JsonConvert.DeserializeObject<List<Exercise>>(responseBody);
+                }
+                catch
+                {
+                    Exercise exercise = JsonConvert.DeserializeObject<Exercise>(responseBody);
+                }
+
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             }
         }
 
@@ -127,32 +173,23 @@ namespace TestStudentExercisesAPI
             }
         }
 
-        //[Fact]
-        //public async Task TestDeleteInstructor()
-        //{
-        //    using (var client = new APIClientProvider().Client)
-        //    {
-        //        // get num of instructors currently in the DB
-        //        var response = await client.GetAsync("/api/instructor");
-        //        string responseBody = await response.Content.ReadAsStringAsync();
-        //        var instructorList = JsonConvert.DeserializeObject<List<Instructor>>(responseBody);
+        [Fact]
+        public async Task TestGetExercisesIncludeStudents()
+        {
+            using (var client = new APIClientProvider().Client)
+            {
+                // Arrange
+                // Act
+                var response = await client.GetAsync("/api/exercise?include=student");
+                string responseBody = await response.Content.ReadAsStringAsync();
+                List<Exercise> exerciseList = JsonConvert.DeserializeObject<List<Exercise>>(responseBody);
 
-        //        int deleteId = 10; //id of instructor to delete
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                Assert.True(exerciseList.Count > 0);
+            }
+        }
 
-        //        // Act
-        //        var response2 = await client.DeleteAsync($"/api/instructor/{deleteId}");
-        //        string responseBody2 = await response.Content.ReadAsStringAsync();
-        //        var instructor = JsonConvert.DeserializeObject<List<Instructor>>(responseBody)[0];
-
-        //        var response3 = await client.GetAsync("/api/instructor");
-        //        string responseBody3 = await response.Content.ReadAsStringAsync();
-        //        var instructorList2 = JsonConvert.DeserializeObject<List<Instructor>>(responseBody3);
-
-        //        // Assert
-        //        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        //        //Assert.True(instructorList2.Count < instructorList.Count);
-        //    }
-        //}
 
     }
 }

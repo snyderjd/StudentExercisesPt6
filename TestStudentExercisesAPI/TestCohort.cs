@@ -31,6 +31,29 @@ namespace TestStudentExercisesAPI
         }
 
         [Fact]
+        public async Task TestGetCohortsWithQ()
+        {
+            using (var client = new APIClientProvider().Client)
+            {
+                // Arrange
+                // Act
+                var response = await client.GetAsync("/api/cohort?q=Day 34");
+                string responseBody = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    List <Cohort> cohortList = JsonConvert.DeserializeObject<List<Cohort>>(responseBody);
+                }
+                catch
+                {
+                    var cohort = JsonConvert.DeserializeObject<Cohort>(responseBody);
+                }
+
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            }
+        }
+
+        [Fact]
         public async Task TestGetCohort()
         {
             using (var client = new APIClientProvider().Client)
