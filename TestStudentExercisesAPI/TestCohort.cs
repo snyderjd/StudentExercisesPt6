@@ -128,23 +128,5 @@ namespace TestStudentExercisesAPI
             }
        }
 
-        //[Fact]
-        //public async Task TestDeleteStudent()
-        //{
-        //    using (var client = new APIClientProvider().Client)
-        //    {
-        //        int deleteId = 14;
-        //        // Arrange
-
-        //        // Act
-        //        var response = await client.DeleteAsync($"/api/student/{deleteId}");
-        //        string responseBody = await response.Content.ReadAsStringAsync();
-        //        var student = JsonConvert.DeserializeObject<Student>(responseBody);
-
-        //        // Assert
-        //        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        //    }
-        //}
-
     }
 }
